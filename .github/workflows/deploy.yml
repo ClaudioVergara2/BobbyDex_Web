@@ -1,4 +1,5 @@
 name: Deploy Astro to GitHub Pages
+
 on:
   push:
     branches: [ main ]
@@ -13,7 +14,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -26,7 +28,7 @@ jobs:
       - name: Build Astro site
         run: npm run build
 
-      - name: Upload artifact for Pages
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v1
         with:
           path: dist
