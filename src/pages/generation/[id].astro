@@ -1,0 +1,103 @@
+---
+import "../../styles/global.css";
+
+export async function getStaticPaths() {
+  const generations = Array.from({ length: 9 }, (_, i) => ({
+    params: { id: String(i + 1) },
+  }));
+
+  return generations;
+}
+
+type PokemonBasic = {
+  name: string;
+  url: string;
+};
+
+type Pokemon = {
+  id: number;
+  name: string;
+  sprites: {
+    front_default: string;
+  };
+};
+
+const rawId = Astro.params.id;
+if (!rawId) throw new Error("No se proporcionó un parámetro de generación");
+const id: string = rawId;
+
+async function fetchGeneration(id: string): Promise<PokemonBasic[]> {
+  try {
+    const r = await fetch(`https://pokeapi.co/api/v2/generation/${id}`);
+    if (!r.ok) throw new Error("Generación no encontrada");
+    const data = await r.json();
+    return data.pokemon_species;
+  } catch (error) {
+    console.error("Error obteniendo la generación:", error);
+    return [];
+  }
+}
+
+async function fetchPokemonData(list: PokemonBasic[]): Promise<Pokemon[]> {
+  try {
+    const fullData = await Promise.all(
+      list.map(async (p: PokemonBasic) => {
+        const realId = p.url.split("/")[6];
+        const r = await fetch(`https://pokeapi.co/api/v2/pokemon/${realId}`);
+
+        if (!r.ok) return null;
+
+        return (await r.json()) as Pokemon;
+      })
+    );
+
+    return fullData.filter((p): p is Pokemon => p !== null);
+  } catch (err) {
+    console.error("Error en fetchPokemonData:", err);
+    return [];
+  }
+}
+
+const species = await fetchGeneration(id);
+const pokemons = await fetchPokemonData(species);
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pokémon — Generación {id}</title>
+  </head>
+
+  <body class="bg-gray-900 text-white min-h-screen">
+    <nav class="bg-gray-800 p-4 shadow mb-8">
+      <h1 class="text-3xl font-bold text-center">BOBBYDEX</h1>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-6">
+      <h2 class="text-4xl font-bold text-center mb-8">
+        Pokémon — Generación {id}
+      </h2>
+
+      {pokemons.length === 0 ? (
+        <p class="text-center text-gray-400">No se encontraron pokémon.</p>
+      ) : (
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {pokemons.map((p: Pokemon) => (
+            <a
+              href={`/pokemon/${p.id}`}
+              class="bg-gray-800 p-4 rounded-xl shadow hover:scale-105 transition text-center block"
+            >
+              <img
+                src={p.sprites.front_default}
+                alt={p.name}
+                class="w-24 h-24 mx-auto mb-2"
+              />
+              <h3 class="capitalize font-bold">{p.name}</h3>
+              <p class="text-gray-400">#{p.id}</p>
+            </a>
+          ))}
+        </div>
+      )}
+    </main>
+  </body>
+</html>
