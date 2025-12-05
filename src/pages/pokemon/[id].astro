@@ -79,25 +79,25 @@ const typeTranslation: Record<string, string> = {
   fairy: "Hada"
 };
 
-const typeColors: Record<string, string> = {
-  Volador: "bg-blue-400",
-  Veneno: "bg-purple-700",
-  Bicho: "bg-green-600",
-  Fuego: "bg-red-600",
-  Hielo: "bg-cyan-300",
-  Tierra: "bg-yellow-700",
-  Psíquico: "bg-pink-500",
-  Roca: "bg-gray-500",
-  Agua: "bg-blue-700",
-  Planta: "bg-green-500",
-  Hada: "bg-pink-300",
-  Normal: "bg-gray-300",
-  Lucha: "bg-red-700",
-  Fantasma: "bg-indigo-700",
-  Dragón: "bg-indigo-500",
-  Siniestro: "bg-gray-800",
-  Acero: "bg-gray-400",
-  Eléctrico: "bg-yellow-400"
+const typeColors: Record<string, { bg: string; text: string }> = {
+  Volador: { bg: "bg-blue-400", text: "text-white" },
+  Veneno: { bg: "bg-purple-700", text: "text-white" },
+  Bicho: { bg: "bg-green-600", text: "text-white" },
+  Fuego: { bg: "bg-red-600", text: "text-white" },
+  Hielo: { bg: "bg-cyan-300", text: "text-black" },
+  Tierra: { bg: "bg-yellow-700", text: "text-white" },
+  Psíquico: { bg: "bg-pink-500", text: "text-white" },
+  Roca: { bg: "bg-gray-500", text: "text-white" },
+  Agua: { bg: "bg-blue-700", text: "text-white" },
+  Planta: { bg: "bg-green-500", text: "text-white" },
+  Hada: { bg: "bg-pink-300", text: "text-black" },
+  Normal: { bg: "bg-gray-300", text: "text-black" },
+  Lucha: { bg: "bg-red-700", text: "text-white" },
+  Fantasma: { bg: "bg-indigo-700", text: "text-white" },
+  Dragón: { bg: "bg-indigo-500", text: "text-white" },
+  Siniestro: { bg: "bg-gray-800", text: "text-white" },
+  Acero: { bg: "bg-gray-400", text: "text-black" },
+  Eléctrico: { bg: "bg-yellow-400", text: "text-black" },
 };
 
 const statTranslation: Record<string, string> = {
@@ -145,6 +145,29 @@ if (evolutionUrl) {
 
   traverseEvo(evoData.chain);
 }
+
+const levelUpMoves: { name: string; level: number; type: string }[] = [];
+
+for (const m of pokemon.moves) {
+  const details = m.version_group_details.find(
+    (d: any) => d.move_learn_method.name === "level-up"
+  );
+  if (details) {
+    const moveRes = await fetch(`https://pokeapi.co/api/v2/move/${m.move.name}`);
+    const moveData = await moveRes.json();
+
+    const spanishNameEntry = moveData.names.find((n: any) => n.language.name === "es");
+    const moveNameEs = spanishNameEntry ? spanishNameEntry.name : m.move.name;
+
+    levelUpMoves.push({
+      name: moveNameEs,
+      level: details.level_learned_at,
+      type: typeTranslation[moveData.type.name] || moveData.type.name,
+    });
+  }
+}
+
+levelUpMoves.sort((a, b) => a.level - b.level);
 ---
 
 <html lang="es">
@@ -177,7 +200,7 @@ if (evolutionUrl) {
                 <span class="text-gray-300">Ninguna</span>
               ) : (
                 weaknesses.map((w) => (
-                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[w] || "bg-gray-600"}`}>{w}</span>
+                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[w].bg} ${typeColors[w].text}`}>{w}</span>
                 ))
               )}
             </div>
@@ -187,7 +210,7 @@ if (evolutionUrl) {
                 <span class="text-gray-300">Ninguna</span>
               ) : (
                 strengths.map((s) => (
-                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[s] || "bg-gray-600"}`}>{s}</span>
+                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[s].bg} ${typeColors[s].text}`}>{s}</span>
                 ))
               )}
             </div>
@@ -227,6 +250,33 @@ if (evolutionUrl) {
                 </>
               ))}
             </div>
+          </div>
+          <div class="bg-gray-800 p-4 rounded-xl shadow mt-4">
+            <h3 class="text-2xl font-bold mb-2">Movimientos</h3>
+            {levelUpMoves.length === 0 ? (
+              <p class="text-gray-300">No hay movimientos disponibles.</p>
+            ) : (
+              <table class="w-full text-left text-gray-300 border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-600">
+                    <th class="px-2 py-1">Nivel</th>
+                    <th class="px-2 py-1">Movimiento</th>
+                    <th class="px-2 py-1">Tipo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {levelUpMoves.map((move) => (
+                    <tr class="border-b border-gray-700 hover:bg-gray-700 transition">
+                      <td class="px-2 py-1">{move.level}</td>
+                      <td class="px-2 py-1 capitalize">{move.name.replace("-", " ")}</td>
+                      <td class={`px-2 py-1 rounded-full text-center ${typeColors[move.type]?.bg || "bg-gray-600"} ${typeColors[move.type]?.text || "text-white"}`}>
+                        {move.type}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>      
