@@ -1,0 +1,112 @@
+---
+import "../styles/global.css";
+
+const typeTranslation: Record<string, string> = {
+  normal: "Normal",
+  fire: "Fuego",
+  water: "Agua",
+  electric: "Eléctrico",
+  grass: "Planta",
+  ice: "Hielo",
+  fighting: "Lucha",
+  poison: "Veneno",
+  ground: "Tierra",
+  flying: "Volador",
+  psychic: "Psíquico",
+  bug: "Bicho",
+  rock: "Roca",
+  ghost: "Fantasma",
+  dragon: "Dragón",
+  dark: "Siniestro",
+  steel: "Acero",
+  fairy: "Hada"
+};
+
+const typeColors: Record<string, string> = {
+  Normal: "bg-gray-300",
+  Fuego: "bg-red-600",
+  Agua: "bg-blue-700",
+  Eléctrico: "bg-yellow-400",
+  Planta: "bg-green-500",
+  Hielo: "bg-cyan-300",
+  Lucha: "bg-red-700",
+  Veneno: "bg-purple-700",
+  Tierra: "bg-yellow-700",
+  Volador: "bg-blue-400",
+  Psíquico: "bg-pink-500",
+  Bicho: "bg-green-600",
+  Roca: "bg-gray-500",
+  Fantasma: "bg-indigo-700",
+  Dragón: "bg-indigo-500",
+  Siniestro: "bg-gray-800",
+  Acero: "bg-gray-400",
+  Hada: "bg-pink-300"
+};
+
+const types = Object.keys(typeTranslation);
+
+async function fetchTypeRelations(typeName: string) {
+  const res = await fetch(`https://pokeapi.co/api/v2/type/${typeName}`);
+  const data = await res.json();
+  return {
+    weak: data.damage_relations.double_damage_from.map((t: any) => typeTranslation[t.name]),
+    strong: data.damage_relations.double_damage_to.map((t: any) => typeTranslation[t.name])
+  };
+}
+
+const typeTable: { type: string; weak: string[]; strong: string[] }[] = [];
+for (const t of types) {
+  const rel = await fetchTypeRelations(t);
+  typeTable.push({ type: typeTranslation[t], weak: rel.weak, strong: rel.strong });
+}
+---
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>BobbyDex - Tabla de Tipos</title>
+  </head>
+  <body class="bg-black text-white min-h-screen flex items-center justify-center">
+    <main class="max-w-5xl w-full p-6 pokedex-frame relative flex flex-col">
+      <div class="pokedex-led"></div>
+      <div class="pokedex-left-btn"></div>
+      <div class="pokedex-right-btn"></div>
+      <div class="pokedex-screen p-4 rounded-2xl bg-gray-900 border-4 border-gray-700 shadow-xl flex-1 overflow-auto max-h-[70vh] pokedex-scroll">
+        <h1 class="text-3xl font-bold text-center text-green-400 mb-4 ">Tabla de Tipos</h1>
+        <div class="overflow-x-auto">
+          <table class="w-full table-auto border-collapse border border-gray-600">  
+            <thead>
+              <tr>
+                <th class="border border-gray-600 px-3 py-2">Tipo</th>
+                <th class="border border-gray-600 px-3 py-2">Debilidades</th>
+                <th class="border border-gray-600 px-3 py-2">Fortalezas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {typeTable.map((t) => (
+                <tr>
+                  <td class={`border border-gray-600 px-3 py-2 font-bold capitalize text-center ${typeColors[t.type]}`}>{t.type}</td>
+                  <td class="border border-gray-600 px-3 py-2">{t.weak.length === 0 ? "Ninguna" : t.weak.join(", ")}</td>
+                  <td class="border border-gray-600 px-3 py-2">{t.strong.length === 0 ? "Ninguna" : t.strong.join(", ")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="flex justify-center gap-4 mt-4">
+        <button class="pokedex-btn prev-btn">
+          <span class="arrow left"></span>
+        </button>
+        <button class="pokedex-btn home-btn">
+          <span class="roof"></span>
+          <span class="walls"></span>
+        </button>
+        <button class="pokedex-btn next-btn">
+          <span class="arrow right"></span>
+        </button>
+      </div>
+    </main>
+    <script type="module" src="/scripts/buttons.js"></script>
+  </body>
+</html>

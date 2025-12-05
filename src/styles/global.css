@@ -79,6 +79,22 @@ body {
 
 .btn-yellow:hover { background-color: #f59e0b; }
 
+.btn-blue {
+  background-color: #3b82f6; /* azul/celeste */
+  border: 2px solid #2563eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.25rem;
+  transition: all 0.2s ease-in-out;
+  display: block;
+}
+
+.btn-blue:hover {
+  background-color: #2563eb;
+}
+
 /* Botones inferiores */
 .pokedex-bottom-btn {
   width: 1.5rem; height: 1.5rem;
