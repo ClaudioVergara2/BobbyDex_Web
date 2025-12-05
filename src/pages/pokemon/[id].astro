@@ -122,7 +122,7 @@ const weaknesses = Array.from(weaknessesSet);
 const strengths = Array.from(strengthsSet);
 
 const evolutionUrl = species.evolution_chain?.url;
-let evolutionLine: { id: number; name: string; sprite: string; from?: number; level?: number }[] = [];
+let evolutionLine: { id: number; name: string; sprite: string; from?: number; evolutionMethod?: string }[] = [];
 
 if (evolutionUrl) {
   const evoRes = await fetch(evolutionUrl);
@@ -130,12 +130,31 @@ if (evolutionUrl) {
 
   function traverseEvo(chain: any, prevId?: number) {
     const id = parseInt(chain.species.url.split("/")[6]);
+
+    let evoMethod = "Desconocido";
+    const evoDetails = chain.evolution_details?.[0];
+    if (evoDetails) {
+      switch (evoDetails.trigger.name) {
+        case "level-up":
+          evoMethod = evoDetails.min_level ? `Nivel ${evoDetails.min_level}` : "Sube de nivel";
+          break;
+        case "use-item":
+          evoMethod = `Usa: ${evoDetails.item?.name.replace("-", " ")}`;
+          break;
+        case "trade":
+          evoMethod = "Intercambio";
+          break;
+        default:
+          evoMethod = "Condición especial";
+      }
+    }
+
     evolutionLine.push({
       id,
       name: chain.species.name,
       sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
       from: prevId,
-      level: chain.evolution_details?.[0]?.min_level || null
+      evolutionMethod: evoMethod
     });
 
     if (chain.evolves_to.length > 0) {
@@ -240,7 +259,7 @@ levelUpMoves.sort((a, b) => a.level - b.level);
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M0 12h24M18 6l6 6-6 6" />
                       </svg>
-                      {p.level && <span class="text-gray-300 text-sm mt-1">Nivel {p.level}</span>}
+                      {p.evolutionMethod && <span class="text-gray-300 text-sm mt-1">{p.evolutionMethod}</span>}
                     </div>
                   )}
                   <a href={`/pokemon/${p.id}`} class="flex flex-col items-center min-w-[100px] bg-gray-700 p-2 rounded-xl shadow hover:scale-105 transition">
