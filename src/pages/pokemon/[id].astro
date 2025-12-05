@@ -122,23 +122,24 @@ const weaknesses = Array.from(weaknessesSet);
 const strengths = Array.from(strengthsSet);
 
 const evolutionUrl = species.evolution_chain?.url;
-
-let evolutionLine: { id: number; name: string; sprite: string }[] = [];
+let evolutionLine: { id: number; name: string; sprite: string; from?: number; level?: number }[] = [];
 
 if (evolutionUrl) {
   const evoRes = await fetch(evolutionUrl);
   const evoData = await evoRes.json();
 
-  function traverseEvo(chain: any) {
+  function traverseEvo(chain: any, prevId?: number) {
     const id = parseInt(chain.species.url.split("/")[6]);
     evolutionLine.push({
       id,
       name: chain.species.name,
       sprite: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+      from: prevId,
+      level: chain.evolution_details?.[0]?.min_level || null
     });
 
     if (chain.evolves_to.length > 0) {
-      chain.evolves_to.forEach(traverseEvo);
+      chain.evolves_to.forEach((next: any) => traverseEvo(next, id));
     }
   }
 
@@ -168,56 +169,66 @@ if (evolutionUrl) {
             <p class="text-gray-300 leading-relaxed">{description}</p>
           </div>
         </div>
-      <div class="flex flex-col gap-4 w-2/3 max-h-[700px] overflow-y-auto pr-2 pokedex-scroll">
-      <div class="bg-gray-800 p-4 rounded-xl shadow">
-        <h3 class="text-2xl font-bold mb-2">Debilidades</h3>
-        <div class="flex flex-wrap gap-2">
-          {weaknesses.length === 0 ? (
-            <span class="text-gray-300">Ninguna</span>
-          ) : (
-            weaknesses.map((w) => (
-              <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[w] || "bg-gray-600"}`}>{w}</span>
-            ))
-          )}
-        </div>
-        <h3 class="text-2xl font-bold mb-2 mt-4">Fortalezas</h3>
-        <div class="flex flex-wrap gap-2">
-          {strengths.length === 0 ? (
-            <span class="text-gray-300">Ninguna</span>
-          ) : (
-            strengths.map((s) => (
-              <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[s] || "bg-gray-600"}`}>{s}</span>
-            ))
-          )}
-        </div>
-      </div>
-      <div class="bg-gray-800 p-4 rounded-xl shadow">
-        <h3 class="text-2xl font-bold mb-2">Estadísticas</h3>
-        <div class="space-y-3">
-          {pokemon.stats.map((s: Stat) => (
-            <div>
-              <p class="capitalize font-semibold">
-                {statTranslation[s.stat.name] || s.stat.name}: {s.base_stat}
-              </p>
-              <div class="w-full bg-gray-700 rounded h-3 mt-1">
-                <div class="h-3 bg-blue-500 rounded" style={`width: ${Math.min((s.base_stat / 200) * 100, 100)}%`}></div>
-              </div>
+        <div class="flex flex-col gap-4 w-2/3 max-h-[700px] overflow-y-auto pr-2 pokedex-scroll">
+          <div class="bg-gray-800 p-4 rounded-xl shadow">
+            <h3 class="text-2xl font-bold mb-2">Debilidades</h3>
+            <div class="flex flex-wrap gap-2">
+              {weaknesses.length === 0 ? (
+                <span class="text-gray-300">Ninguna</span>
+              ) : (
+                weaknesses.map((w) => (
+                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[w] || "bg-gray-600"}`}>{w}</span>
+                ))
+              )}
             </div>
-          ))}
+            <h3 class="text-2xl font-bold mb-2 mt-4">Fortalezas</h3>
+            <div class="flex flex-wrap gap-2">
+              {strengths.length === 0 ? (
+                <span class="text-gray-300">Ninguna</span>
+              ) : (
+                strengths.map((s) => (
+                  <span class={`px-3 py-1 rounded-full capitalize shadow ${typeColors[s] || "bg-gray-600"}`}>{s}</span>
+                ))
+              )}
+            </div>
+          </div>
+          <div class="bg-gray-800 p-4 rounded-xl shadow">
+            <h3 class="text-2xl font-bold mb-2">Estadísticas</h3>
+            <div class="space-y-3">
+              {pokemon.stats.map((s: Stat) => (
+                <div>
+                  <p class="capitalize font-semibold">
+                    {statTranslation[s.stat.name] || s.stat.name}: {s.base_stat}
+                  </p>
+                  <div class="w-full bg-gray-700 rounded h-3 mt-1">
+                    <div class="h-3 bg-blue-500 rounded" style={`width: ${Math.min((s.base_stat / 200) * 100, 100)}%`}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="bg-gray-800 p-4 rounded-xl shadow mt-4 flex flex-col">
+            <h3 class="text-2xl font-bold mb-2">Línea Evolutiva</h3>
+            <div class="flex items-center gap-2">
+              {evolutionLine.map((p, i) => (
+                <>
+                  {i > 0 && (
+                    <div class="flex flex-col items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M0 12h24M18 6l6 6-6 6" />
+                      </svg>
+                      {p.level && <span class="text-gray-300 text-sm mt-1">Nivel {p.level}</span>}
+                    </div>
+                  )}
+                  <a href={`/pokemon/${p.id}`} class="flex flex-col items-center min-w-[100px] bg-gray-700 p-2 rounded-xl shadow hover:scale-105 transition">
+                    <img src={p.sprite} alt={p.name} class="w-20 h-20 object-contain mb-2"/>
+                    <span class="capitalize text-center">{p.name}</span>
+                  </a>
+                </>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="bg-gray-800 p-4 rounded-xl shadow mt-4">
-        <h3 class="text-2xl font-bold mb-2">Línea Evolutiva</h3>
-        <div class="flex gap-4">
-          {evolutionLine.map((p) => (
-            <a href={`/pokemon/${p.id}`} class="flex flex-col items-center min-w-[100px] bg-gray-700 p-2 rounded-xl shadow hover:scale-105 transition">
-              <img src={p.sprite} alt={p.name} class="w-20 h-20 object-contain mb-2"/>
-              <span class="capitalize text-center">{p.name}</span>
-            </a>
-          ))}
-        </div>
-      </div>
-    </div>
       </div>      
       <div class="flex justify-center gap-4 mt-6">
         <button class="pokedex-btn prev-btn">
