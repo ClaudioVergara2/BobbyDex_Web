@@ -28,10 +28,7 @@ const generations = [
         <h1 class="text-3xl font-bold text-center text-green-400 mb-6">Regiones</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {generations.map((gen) => (
-            <a 
-              href={`/generation/${gen.id}`} 
-              class={`bg-linear-to-b ${gen.color} p-6 rounded-xl shadow-lg hover:scale-105 transition block text-center`}
-            >
+            <a href={`/generation/${gen.id}`} class={`bg-linear-to-b ${gen.color} p-6 rounded-xl shadow-lg hover:scale-105 transition block text-center`}>
               <h2 class="text-xl font-bold">{gen.region}</h2>
             </a>
           ))}
@@ -50,5 +47,6 @@ const generations = [
         </button>
       </div>
     </main>
+    <script type="module" src="/scripts/buttons.js"></script>
   </body>
 </html>
