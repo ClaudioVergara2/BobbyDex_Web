@@ -22,9 +22,23 @@ type Pokemon = {
   };
 };
 
+const regionNames: Record<string, string> = {
+  "1": "Kanto",
+  "2": "Johto",
+  "3": "Hoenn",
+  "4": "Sinnoh",
+  "5": "Unova",
+  "6": "Kalos",
+  "7": "Alola",
+  "8": "Galar",
+  "9": "Paldea"
+};
+
 const rawId = Astro.params.id;
 if (!rawId) throw new Error("No se proporcionó un parámetro de generación");
+
 const id: string = rawId;
+const regionName = regionNames[id] ?? `Generación ${id}`;
 
 async function fetchGeneration(id: string): Promise<PokemonBasic[]> {
   try {
@@ -58,14 +72,15 @@ async function fetchPokemonData(list: PokemonBasic[]): Promise<Pokemon[]> {
 
 const species = await fetchGeneration(id);
 const pokemons = await fetchPokemonData(species);
+
+pokemons.sort((a, b) => a.id - b.id);
 ---
 
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <title>Generación {id} — BobbyDex</title>
+    <title>BobbyDex - Región {regionName}</title>
   </head>
-
   <body class="bg-black text-white min-h-screen flex items-center justify-center">
     <main class="max-w-4xl mx-auto relative pokedex-frame p-6">
       <div class="pokedex-led"></div>
@@ -73,15 +88,19 @@ const pokemons = await fetchPokemonData(species);
       <div class="pokedex-right-btn"></div>
       <div class="pokedex-screen p-6 rounded-2xl bg-gray-900 border-4 border-gray-700 shadow-xl">
         <h1 class="text-3xl font-bold text-center text-green-400 mb-6">
-          Generación {id}
+          Región {regionName}
         </h1>
         {pokemons.length === 0 ? (
           <p class="text-center text-gray-300">No se encontraron Pokémon.</p>
         ) : (
-          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 
+                  max-h-[500px] overflow-y-auto pr-2 pokedex-scroll">
             {pokemons.map((p: Pokemon) => (
               <a href={`/pokemon/${p.id}`} class="bg-gray-800 p-4 rounded-xl shadow hover:scale-105 transition text-center block">
-                <img src={p.sprites.front_default} alt={p.name} class="w-24 h-24 mx-auto mb-2"/>
+                <img 
+                  src={p.sprites.front_default} 
+                  alt={p.name} 
+                  class="w-24 h-24 mx-auto mb-2"/>
                 <h3 class="capitalize font-bold">{p.name}</h3>
                 <p class="text-gray-400">#{p.id}</p>
               </a>
@@ -90,10 +109,18 @@ const pokemons = await fetchPokemonData(species);
         )}
       </div>
       <div class="flex justify-center gap-4 mt-6">
-        <div class="w-6 h-6 bg-blue-800 rounded-full border-2 border-black"></div>
-        <div class="w-6 h-6 bg-yellow-400 rounded-full border-2 border-black"></div>
-        <div class="w-6 h-6 bg-green-500 rounded-full border-2 border-black"></div>
+        <button class="pokedex-btn prev-btn">
+          <span class="arrow left"></span>
+        </button>
+        <button class="pokedex-btn home-btn">
+          <span class="roof"></span>
+          <span class="walls"></span>
+        </button> 
+        <button class="pokedex-btn next-btn">
+          <span class="arrow right"></span>
+        </button>
       </div>
     </main>
+    <script type="module" src="/scripts/buttons.js"></script>
   </body>
 </html>
